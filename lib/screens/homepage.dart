@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_list/providers/task_provider.dart';
 import 'package:todo_list/utils/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,14 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> tasks = [];
   TextEditingController taskscontroller = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    loadTasks();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +67,21 @@ class _HomePageState extends State<HomePage> {
               width: double.infinity,
 
               child: ElevatedButton(
-                onPressed: addTasks,
+                onPressed: () async {
+                  if (taskscontroller.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please enter a task")),
+                    );
+
+                    return;
+                  }
+
+                  await context.read<TaskProvider>().addTasks(
+                    taskscontroller.text,
+                  );
+
+                  taskscontroller.clear();
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
@@ -94,108 +100,78 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: tasks.isEmpty
-                ? Center(
-                    child: Text(
-                      'No Tasks yet!',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.only(
-                      top: 40,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: ListView.builder(
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          child: ListTile(
-                            leading: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  tasks[index]["isDone"] =
-                                      !tasks[index]["isDone"];
-                                });
-                              },
-                              icon: tasks[index]["isDone"]
-                                  ? const Icon(Icons.check_circle)
-                                  : const Icon(Icons.circle_outlined),
-                              color: AppColors.accent,
-                            ),
-                            title: Text(
-                              tasks[index]["task"],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                decoration: tasks[index]["isDone"]
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              onPressed: () => deleteTasks(index),
-                              icon: Icon(Icons.delete),
-                              color: Colors.red,
-                            ),
+            child: Consumer<TaskProvider>(
+              builder: (context, provider, child) {
+                return provider.tasks.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No Tasks yet!',
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
                           ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.only(
+                          top: 40,
+                          left: 10,
+                          right: 10,
+                        ),
+                        child: Consumer<TaskProvider>(
+                          builder: (context, provider, child) {
+                            return ListView.builder(
+                              itemCount: provider.tasks.length,
+
+                              itemBuilder: (context, index) {
+                                final task = provider.tasks[index];
+
+                                return Card(
+                                  child: ListTile(
+                                    leading: IconButton(
+                                      onPressed: () {
+                                        provider.toggleTask(index);
+                                      },
+
+                                      icon: task.isDone
+                                          ? const Icon(Icons.check_circle)
+                                          : const Icon(Icons.circle_outlined),
+
+                                      color: AppColors.accent,
+                                    ),
+
+                                    title: Text(
+                                      task.task,
+
+                                      style: TextStyle(
+                                        decoration: task.isDone
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                      ),
+                                    ),
+
+                                    trailing: IconButton(
+                                      onPressed: () {
+                                        provider.deleteTask(index);
+                                      },
+
+                                      icon: Icon(Icons.delete),
+
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      );
+              },
+            ),
           ),
         ],
       ),
     );
-  }
-
-  void addTasks() {
-    if (taskscontroller.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please enter a task")));
-
-      return;
-    }
-
-    setState(() {
-      tasks.add({"task": taskscontroller.text.trim(), "isDone": false});
-    });
-
-    saveTasks();
-
-    taskscontroller.clear();
-  }
-
-  void deleteTasks(int index) {
-    setState(() {
-      tasks.removeAt(index);
-    });
-    saveTasks();
-  }
-
-  // shared_preferences SaveTasks Logic
-  void saveTasks() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    List<String> encodedTasks = tasks.map((task) => jsonEncode(task)).toList();
-    prefs.setStringList("myTasks", encodedTasks);
-  }
-
-  // shared_preferences LoadTasks logic
-  void loadTasks() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    List<String> savedTasks = prefs.getStringList("myTasks") ?? [];
-    setState(() {
-      tasks = savedTasks
-          .map((tasks) => Map<String, dynamic>.from(jsonDecode(tasks)))
-          .toList();
-    });
   }
 }
