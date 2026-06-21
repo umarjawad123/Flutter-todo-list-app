@@ -97,6 +97,8 @@ lib/
 │   └── home_page.dart
 ├── providers/
 │   └── task_provider.dart
+├── models/
+│   └── task_model.dart
 └── utils/
     └── app_colors.dart
 ```
