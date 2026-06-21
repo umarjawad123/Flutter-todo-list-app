@@ -1,12 +1,14 @@
 # 📝 TODO List App (Flutter)
 
-A simple and interactive TODO List application developed during Week 2 of my internship. This project demonstrates basic CRUD operations, dynamic UI updates, and state management in Flutter.
+A simple and interactive TODO List application developed during Week 2 of my internship. This project demonstrates CRUD operations, dynamic UI updates, and **state management using Provider** in Flutter.
 
 ---
 
 ## 🎯 Project Overview
 
 This application allows users to add, manage, and complete daily tasks. Users can input tasks through a TextField, view them in a list, mark them as completed, and delete them when no longer needed.
+
+The app uses **Provider for state management**, ensuring a clean separation between UI and business logic and enabling scalable and reactive state updates across the widget tree.
 
 The app also properly handles empty states when no tasks are available.
 
@@ -21,6 +23,7 @@ The app also properly handles empty states when no tasks are available.
 * Delete tasks from the list
 * Empty state message when no tasks exist
 * Clean and minimal UI design
+* Efficient reactive state updates using Provider
 
 ---
 
@@ -55,6 +58,7 @@ The app also properly handles empty states when no tasks are available.
 * Flutter
 * Dart
 * Material Design
+* Provider (State Management)
 
 ---
 
@@ -63,21 +67,23 @@ The app also properly handles empty states when no tasks are available.
 1. User opens the app
 2. If no tasks exist → empty state message is shown
 3. User enters task in TextField
-4. Task is added to list dynamically
-5. User can mark task as completed
-6. Completed tasks show strike-through effect
-7. User can delete tasks from list
+4. Task is added via Provider
+5. UI automatically updates using notifyListeners()
+6. User can mark task as completed (state updates via Provider)
+7. Completed tasks show strike-through effect
+8. User can delete tasks (Provider updates UI reactively)
 
 ---
 
 ## 🧠 Key Concepts Used
 
-* Stateful Widgets
-* setState() for UI updates
+* Provider (ChangeNotifier, ChangeNotifierProvider)
+* notifyListeners() for reactive UI updates
+* Consumer / Provider.of context usage
 * Dynamic List handling
 * TextField input handling
 * Conditional UI rendering
-* Basic CRUD operations
+* CRUD operations (Create, Read, Update, Delete)
 * Flutter ListView
 
 ---
@@ -89,6 +95,8 @@ lib/
 ├── main.dart
 ├── screens/
 │   └── home_page.dart
+├── providers/
+│   └── task_provider.dart
 └── utils/
     └── app_colors.dart
 ```
@@ -131,6 +139,7 @@ flutter run
 * Add task priority levels
 * Improve UI with animations
 * Dark mode support
+* Consider migration to Riverpod for advanced state management
 
 ---
 
